@@ -1,7 +1,9 @@
 
 
 
-def function():    
+
+
+def function(memory):    
     # Cargar el prompt JSON
     prompt = prompt_s3()
 
@@ -15,6 +17,15 @@ def function():
     ]
 
 
+
+
+
+    # Inicializar el modelo
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo")
+    conversation = ConversationChain(llm=llm, memory=memory)
+
+    # Generar respuesta con memoria
+    response = conversation.predict(input=message)
 
 
 
