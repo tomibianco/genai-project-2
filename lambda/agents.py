@@ -45,6 +45,7 @@ agent = AgentExecutor(
 def process_message(sender, message):
     try:
         memory = load_memory(sender)
+        agent.memory = memory
         user_message = HumanMessage(content=message)
         response = agent.run([user_message])
         memory = save_memory(sender)
