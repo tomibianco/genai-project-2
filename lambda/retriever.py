@@ -1,14 +1,14 @@
 import os
 from io import BytesIO
-from dotenv import load_dotenv
-import pandas as pd
-import fitz
-from docx import Document
 import boto3
+import fitz
+import pandas as pd
+from docx import Document
+from dotenv import load_dotenv
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pinecone import Pinecone, ServerlessSpec
 import pinecone
+from pinecone import Pinecone, ServerlessSpec
 
 
 load_dotenv()

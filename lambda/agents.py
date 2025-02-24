@@ -30,8 +30,8 @@ tools = [wikipedia_tool]
 memory = ConversationBufferMemory()
 
 # Inicializar la conexión con Pinecone
-index_name = "genaiproject2"
-vectorstore = Pinecone.from_existing_index(index_name)
+# index_name = "genaiproject2"
+# vectorstore = Pinecone.from_existing_index(index_name)
 
 # Creación del Agente
 agent = AgentExecutor(
@@ -39,7 +39,7 @@ agent = AgentExecutor(
     tools=tools,
     memory=memory,
     prompt_template=prompt_template,
-    vectorstore=vectorstore
+    # vectorstore=vectorstore
 )
 
 def process_message(sender, message):
