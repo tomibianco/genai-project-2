@@ -1,4 +1,4 @@
-
+from langchain.vectorstores import Pinecone
 
 
 
@@ -9,6 +9,9 @@ def function(memory):
 
     # Configurar modelo LangChain
     chat = ChatOpenAI(model_name="gpt-3.5-turbo")
+
+    # Inicializar la conexión con Pinecone
+    vectorstore = Pinecone.from_existing_index(index_name, embeddings)
 
     # Crear mensaje con los datos del JSON
     messages = [
