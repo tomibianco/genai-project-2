@@ -17,6 +17,5 @@ PROMPT_FILE = "prompt.json"
 PROMPT_FILE_PATH = "/home/tomibianco/genai_2/prompt_test.json"
 def prompt_s3():
     """Lee el prompt JSON desde un archivo local"""
-    with open(PROMPT_FILE_PATH, 'r', encoding='utf-8') as file:
-        content = file.read()
-    return json.loads(content)
+    with open("/home/tomibianco/genai_2/prompt_test.json", "r") as f:
+        prompt = f.read()

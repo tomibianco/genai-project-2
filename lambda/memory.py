@@ -27,6 +27,8 @@ from langchain.memory import ConversationBufferMemory
 
 
 # Directorio local para almacenar la memoria
+import os
+
 LOCAL_MEMORY_DIR = "memory"
 
 def load_memory(session_id):
