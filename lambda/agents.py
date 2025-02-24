@@ -1,51 +1,56 @@
+import logging
+import os
+import re
+from dotenv import load_dotenv
+from memory import load_memory, save_memory
+from langchain.agents import AgentExecutor
+from langchain.chat_models import ChatOpenAI
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import PromptTemplate
+from langchain.schema import HumanMessage
 from langchain.vectorstores import Pinecone
+from prompt import prompt_s3
+from tools import wikipedia_tool
 
 
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+# Configuración de LLM
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0.4, openai_api_key=OPENAI_API_KEY)
 
-def function(memory):    
-    # Cargar el prompt JSON
-    prompt = prompt_s3()
+# Carga de prompt desde S3
+prompt_data = prompt_s3()
+prompt_template = PromptTemplate.from_dict(prompt_data)
 
-    # Configurar modelo LangChain
-    chat = ChatOpenAI(model_name="gpt-3.5-turbo")
+# Herramientas
+tools = [wikipedia_tool]
 
-    # Inicializar la conexión con Pinecone
-    vectorstore = Pinecone.from_existing_index(index_name, embeddings)
+# Crear memoria de conversación
+memory = ConversationBufferMemory()
 
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",  # Puedes usar "stuff", "map_reduce", o "refine" según el flujo de trabajo
-        retriever=vectorstore.as_retriever()
-    )
+# Inicializar la conexión con Pinecone
+index_name = "genaiproject2"
+vectorstore = Pinecone.from_existing_index(index_name)
 
-    # Crear mensaje con los datos del JSON
-    messages = [
-        SystemMessage(content=prompt["role"] + " " + prompt["instructions"] + " " + prompt["context"]),
-        HumanMessage(content="Explica el proceso de extracción de litio")
-    ]
+# Creación del Agente
+agent = AgentExecutor(
+    llm=llm,
+    tools=tools,
+    memory=memory,
+    prompt_template=prompt_template,
+    vectorstore=vectorstore
+)
 
-
-
-
-
-    # Inicializar el modelo
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo")
-    conversation = ConversationChain(llm=llm, memory=memory)
-
-    # Generar respuesta con memoria
-    response = conversation.predict(input=message)
-
-
-
-
-
-
-
-
-
-sentences = re.split(r'(?<=[.!?]) +', agent_reply)
-
-return {
-        'messages': sentences
-    }
+def process_message(sender, message):
+    try:
+        memory = load_memory(sender)
+        user_message = HumanMessage(content=message)
+        response = agent.run([user_message])
+        memory = save_memory(sender)
+        sentences = re.split(r'(?<=[.!?]) +', response)
+        logging.info(f"Respuesta generada por el agente: {response}")
+        return sentences
+    except Exception as e:
+        logging.error("Error al procesar el mensaje", exc_info=True)
+        raise e

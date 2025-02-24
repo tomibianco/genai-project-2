@@ -1,7 +1,6 @@
 import json
 import logging
 from agents import process_message
-from memory import load_memory, save_memory
 
 logging.basicConfig(level=logging.INFO)
 
@@ -14,11 +13,7 @@ def lambda_handler(event):
         logging.info(f" Mensaje recibido de {sender}: {message}")
 
         # Procesamiento del mensaje con los agentes
-        memory = load_memory(sender)
-        response = process_message(message, memory)
-        save_memory(sender, memory)
-        if not isinstance(response, list):
-            response = [response]
+        response = process_message(sender, message)
         response_array = {
             "response": [{"message": resp} for resp in response]
         }
