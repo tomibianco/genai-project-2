@@ -13,6 +13,12 @@ def function(memory):
     # Inicializar la conexión con Pinecone
     vectorstore = Pinecone.from_existing_index(index_name, embeddings)
 
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",  # Puedes usar "stuff", "map_reduce", o "refine" según el flujo de trabajo
+        retriever=vectorstore.as_retriever()
+    )
+
     # Crear mensaje con los datos del JSON
     messages = [
         SystemMessage(content=prompt["role"] + " " + prompt["instructions"] + " " + prompt["context"]),

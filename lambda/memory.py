@@ -1,11 +1,11 @@
-import json
 import boto3
+import json
 from langchain.memory import ConversationBufferMemory
+
 
 # Configurar cliente de S3
 s3_client = boto3.client("s3")
 BUCKET_NAME = "agent-memory"
-
 
 def load_memory(session_id):
     """Carga el historial de conversación desde S3"""
