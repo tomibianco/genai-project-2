@@ -1,7 +1,5 @@
 import boto3
 import json
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
 
 # Configurar cliente de S3
 s3 = boto3.client("s3")
