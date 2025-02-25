@@ -1,13 +1,15 @@
+import sympy as sp
 from langchain_core.tools import tool
-import requests
 
 @tool
-def search_wikipedia(query: str) -> str:
-    """Busca un término en Wikipedia y devuelve un resumen."""
-    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{query}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json().get("extract", "No se encontró información.")
-    return "Error al obtener datos de Wikipedia."
+def scientific_calculator(expression: str) -> str:
+    """
+    Evalúa una expresión matemática usando SymPy. Soporta operaciones científicas avanzadas.
+    """
+    try:
+        result = sp.sympify(expression)
+        return str(result)
+    except Exception as e:
+        return f"Error en el cálculo: {str(e)}"
 
-tools = [search_wikipedia]
+tools = [scientific_calculator]
