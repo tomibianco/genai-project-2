@@ -19,6 +19,7 @@ class State(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
 
 builder = StateGraph(State)
+memory = MemorySaver()
 
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0.4, openai_api_key=OPENAI_API_KEY)
 
@@ -36,7 +37,7 @@ tool_node = ToolNode(tools=tools)
 def assistant(state: State):
     try:
         response = {"messages": [llm_tools.invoke(state["messages"])]}
-        logging.info(f"Respuesta generada por el agente: {response}")
+        logging.info(f"Respuesta correctamente generada por el agente")
         return response
     except Exception as e:
         logging.error("Error al procesar el mensaje", exc_info=True)
@@ -48,6 +49,5 @@ builder.add_node("tools", tool_node)
 builder.add_edge(START, "assistant")
 builder.add_conditional_edges("assistant", tools_condition)
 builder.add_edge("tools", "assistant")
-memory = MemorySaver()
 builder.add_edge("assistant", END)
 graph = builder.compile(checkpointer=memory)
