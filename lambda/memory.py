@@ -6,7 +6,7 @@ class MemoryManager:
         self.redis = redis.Redis(host=host, port=port, db=db, decode_responses=True)
 
     def store_message(self, sender, message, response):
-        """Guarda la conversación en Redis"""
+        """Almacena la conversación en Redis"""
         key = f"chat_history:{sender}"
         chat_history = self.get_history(sender)
         chat_history.append({"user": message, "bot": response})
