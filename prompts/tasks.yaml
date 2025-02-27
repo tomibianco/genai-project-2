@@ -1,8 +1,10 @@
-research_task:
+sales_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is 2025.
+    Maneja el proceso de venta de servicios de inteligencia artificial
+    en Chile, de la empresa Datasiete, resolviendo las dudas de los
+    clientes, induciendo sus necesidades e intentando cerrar la venta
+    del servicio más apropiado en cada caso.
+    f"{context}\nUsuario: {message}"
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    Respuestas breves que respondan la consulta y duda de los clientes.
+  agent: seller

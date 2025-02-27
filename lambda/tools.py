@@ -1,7 +1,7 @@
 import sympy as sp
-from langchain_core.tools import tool
+from crewai.tools import tool
 
-@tool
+@tool("Calculadora Científica")
 def scientific_calculator(expression: str) -> str:
     """
     Evalúa una expresión matemática usando SymPy. Soporta operaciones científicas avanzadas.
@@ -11,5 +11,3 @@ def scientific_calculator(expression: str) -> str:
         return str(result)
     except Exception as e:
         return f"Error en el cálculo: {str(e)}"
-
-tools = [scientific_calculator]
