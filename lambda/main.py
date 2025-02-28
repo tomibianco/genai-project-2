@@ -1,13 +1,14 @@
-from prueba import ChatBot
+from crew import SalesCrew
 from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
+import re
 
 
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
-agent = ChatBot()
+sales_crew = SalesCrew()
 
 class MessageRequest(BaseModel):
     sender: str
@@ -26,7 +27,12 @@ async def lambda_handler(request: MessageRequest):
         sender = request.sender
         message = request.message
         logging.info(f" Mensaje recibido de {sender}: {message}")
-        response = agent.process_message(sender, message)
+        response = sales_crew.crew().kickoff(
+            inputs={
+                "sender": sender,
+                "message": message
+            }
+        )
         logging.info(f" Respuesta generada por el agente")
         return {"response": response}
     except Exception as e:
