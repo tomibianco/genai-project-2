@@ -2,7 +2,6 @@ from crew import SalesCrew
 from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
-import re
 
 
 logging.basicConfig(level=logging.INFO)

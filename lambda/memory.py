@@ -1,9 +1,14 @@
 import redis
 import json
+import os
+
 
 class MemoryManager:
-    def __init__(self, host='localhost', port=6379, db=0):
-        self.redis = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+    def __init__(self, host="localhost", port=6379, db=0):
+        self.host = host or os.environ.get("REDIS_HOST")
+        self.port = port or int(os.environ.get("REDIS_PORT"))
+        self.pool = redis.ConnectionPool(host=self.host, port=self.port, db=self.db, decode_responses=True)
+        self.redis = redis.Redis(connection_pool=self.pool)
 
     def store_message(self, sender, message, response):
         """Almacena la conversación en Redis"""
