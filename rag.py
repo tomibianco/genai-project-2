@@ -1,93 +1,123 @@
 import os
-from io import BytesIO
-import boto3
-import fitz
-import pandas as pd
-from docx import Document
+import re
+# from docx import Document
 from dotenv import load_dotenv
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-import pinecone
-from pinecone import Pinecone, ServerlessSpec
+import pandas as pd
+from pinecone import Pinecone
+import PyPDF2
+from langchain_community.embeddings import OpenAIEmbeddings
 
 
 load_dotenv()
 
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+FOLDER_PATH = os.getenv("FOLDER_PATH")
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
+index = pc.Index("genaiproject2")
 
 embed = OpenAIEmbeddings(
     model="text-embedding-3-small",
     openai_api_key=OPENAI_API_KEY
 )
 
-s3 = boto3.client('s3')
 
-# Función para descargar archivos desde S3
-def download_from_s3(bucket_name, key):
-    response = s3.get_object(Bucket=bucket_name, Key=key)
-    return BytesIO(response['Body'].read())
+def extract_text_pdf(file_path):
+    """Extrae texto de un archivo PDF."""
+    text = ""
+    with open(file_path, 'rb') as f:
+        reader = PyPDF2.PdfReader(f)
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + " "
+    return text
 
-# Función para cargar y procesar archivos XLSX
-def load_xlsx(file_path):
-    df = pd.read_excel(download_from_s3(S3_BUCKET_NAME, file_path))
+def extract_text_excel(file_path):
+    """Extrae texto de un archivo Excel convirtiéndolo en string."""
+    df = pd.read_excel(file_path)
     return df.to_string()
 
-# Función para cargar y procesar archivos PDF
-def load_pdf(file_path):
-    doc = fitz.open(stream=download_from_s3(S3_BUCKET_NAME, file_path), filetype="pdf")
-    text = ""
-    for page in doc:
-        text += page.get_text()
+def extract_text_csv(file_path):
+    """Extrae texto de un archivo CSV convirtiéndolo en string."""
+    df = pd.read_csv(file_path)
+    return df.to_string()
+
+def extract_text_word(file_path):
+    """Extrae texto de un documento Word."""
+#     doc = Document(file_path)  # Changed from docx.Document to Document
+#     text = " ".join([para.text for para in doc.paragraphs])
     return text
 
-# Función para cargar y procesar archivos DOC
-def load_doc(file_path):
-    doc = Document(download_from_s3(S3_BUCKET_NAME, file_path))
-    text = ""
-    for para in doc.paragraphs:
-        text += para.text + "\n"
-    return text
+def extract_text(file_path):
+    """Detecta el tipo de archivo y extrae el texto correspondiente."""
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext == ".pdf":
+        return extract_text_pdf(file_path)
+    elif ext in [".xls", ".xlsx"]:
+        return extract_text_excel(file_path)
+    elif ext == ".csv":
+        return extract_text_csv(file_path)
+    elif ext in [".doc", ".docx"]:
+        return extract_text_word(file_path)
+    else:
+        raise ValueError(f"Tipo de archivo no soportado: {ext}")
 
-# Listas de archivos en S3
-xlsx_files = [f"xlsx/{file['Key']}" for file in s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix="xlsx/")['Contents']]
-pdf_files = [f"pdf/{file['Key']}" for file in s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix="pdf/")['Contents']]
-doc_files = [f"doc/{file['Key']}" for file in s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix="doc/")['Contents']]
+def split_text(text, chunk_size):
+    """ Divide el texto en fragmentos de tamaño 'chunk_size' palabras."""
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size):
+        chunk = " ".join(words[i:i+chunk_size])
+        chunks.append(chunk)
+    return chunks
 
-# Cargar y combinar documentos
-combined_doc = ""
-for file_path in xlsx_files:
-    combined_doc += load_xlsx(file_path) + "\n"
-for file_path in pdf_files:
-    combined_doc += load_pdf(file_path) + "\n"
-for file_path in doc_files:
-    combined_doc += load_doc(file_path) + "\n"
+def get_embedding(text):
+    """ Función para generar el embedding de un texto usando el modelo "text-embedding-3-small."""
+    embedding = embed.embed_query(text)
+    return embedding
 
-# Ajustar tamaño del chunk y overlap
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-documents = text_splitter.split_documents(combined_doc)
+def sanitize_filename(filename):
+    """Sanitiza el nombre del archivo para usar como ID en Pinecone."""
+    sanitized = re.sub(r'[^a-z0-9-]', '-', filename.lower())
+    sanitized = re.sub(r'-+', '-', sanitized)
+    return sanitized.strip('-')
 
-index_name = "genaiproject2"
+def process_file(file_path):
+    """
+    Procesa un archivo completo:
+    - Extrae el texto.
+    - Lo segmenta en chunks.
+    - Genera embeddings para cada chunk.
+    - Sube los vectores a Pinecone junto con metadatos.
+    """
+    print(f"Procesando: {file_path}")
+    text = extract_text(file_path)
+    chunks = split_text(text, chunk_size=500)
+    vectors = []
+    base_filename = sanitize_filename(os.path.basename(file_path))
+    for i, chunk in enumerate(chunks):
+        embedding = get_embedding(chunk)
+        vector_id = f"{base_filename}-{i}"
+        metadata = {
+            "file": os.path.basename(file_path),
+            "chunk": i
+        }
+        vectors.append((vector_id, embedding, metadata))
+    index.upsert(vectors)
+    print(f"Archivo {os.path.basename(file_path)} procesado y subido a Pinecone.")
 
-# Verificar si el índice ya existe antes de crearlo
-if index_name not in pc.list_indexes():
-    pc.create_index(
-        name=index_name,
-        dimension=1536,
-        metric="cosine",
-        spec=ServerlessSpec(
-            cloud="aws",
-            region="us-east-1"
-        )
-    )
 
-# Conexión al índice
-index = pinecone.Index(index_name)
+def main():    
+    """Recorremos todos los archivos en el directorio."""
+    for file in os.listdir(FOLDER_PATH):
+        file_path = os.path.join(FOLDER_PATH, file)
+        try:
+            process_file(file_path)
+        except Exception as e:
+            print(f"Error procesando {file}: {str(e)}")
 
-# Vectorizar y subir documentos al índice
-for i, doc in enumerate(documents):
-    vector = embed.embed_query(doc)
-    index.upsert([(f"doc{i+1}", vector)])
+
+if __name__ == '__main__':
+    main()

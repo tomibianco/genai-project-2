@@ -1,11 +1,7 @@
-boto3==1.36.26
 crewai==0.102.0
-docx==0.2.4
-fastapi==0.115.8
-fitz==0.0.1.dev2
-pandas==2.2.3
-pinecone==6.0.1
+fastapi==0.115.9
+mangum==0.19.0
 pydantic==2.10.6
 python-dotenv==1.0.1
 redis==5.2.1
-requests==2.32.3
+sympy==1.13.3
