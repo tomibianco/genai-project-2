@@ -1,13 +1,13 @@
-import redis
 import json
 import os
+import redis
 
 
 class MemoryManager:
-    def __init__(self, host="localhost", port=6379, db=0):
+    def __init__(self, host="localhost", port=6379):
         self.host = host or os.environ.get("REDIS_HOST")
         self.port = port or int(os.environ.get("REDIS_PORT"))
-        self.pool = redis.ConnectionPool(host=self.host, port=self.port, db=self.db, decode_responses=True)
+        self.pool = redis.ConnectionPool(host=self.host, port=self.port, decode_responses=True)
         self.redis = redis.Redis(connection_pool=self.pool)
 
     def store_message(self, sender, message, response):
@@ -17,7 +17,7 @@ class MemoryManager:
         chat_history.append({"user": message, "bot": response})
         
         # Guarda la conversación en formato JSON
-        self.redis.set(key, json.dumps(chat_history), ex=86400)  # Expira en 24 horas
+        self.redis.set(key, json.dumps(chat_history), ex=86400)  # Tiempo de expiración en segundos (24 horas)
 
     def get_history(self, sender):
         """Obtiene el historial de conversación"""

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from crewai import Agent, Crew, LLM, Process, Task
 from crewai.project import CrewBase, agent, after_kickoff, before_kickoff, crew, task
 from memory import MemoryManager
-from tools import scientific_calculator, rag_docs
+# from tools import scientific_calculator, rag_docs
 
 
 load_dotenv()
@@ -58,7 +58,8 @@ class SalesCrew:
         return Agent(
             config=self.agents_config["seller"],
             llm=llm,
-            tools=[scientific_calculator, rag_docs],
+            # tools=[scientific_calculator, rag_docs],
+            max_retries=2,
             verbose=True
         )
     

@@ -20,9 +20,6 @@ def index():
 @app.post("/lambda")
 async def lambda_handler(request: MessageRequest):
     try:
-        # body = json.loads(event.get("body", "{}"))
-        # sender = body.get("sender")
-        # message = body.get("message", "")
         sender = request.sender
         message = request.message
         logging.info(f" Mensaje recibido de {sender}: {message}")
