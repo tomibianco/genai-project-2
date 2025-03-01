@@ -1,11 +1,12 @@
 import os
 import re
-# from docx import Document
-from dotenv import load_dotenv
 import pandas as pd
-from pinecone import Pinecone
+from dotenv import load_dotenv
+from docx import Document
 import PyPDF2
 from langchain_community.embeddings import OpenAIEmbeddings
+from pinecone import Pinecone
+
 
 
 load_dotenv()
@@ -46,8 +47,8 @@ def extract_text_csv(file_path):
 
 def extract_text_word(file_path):
     """Extrae texto de un documento Word."""
-#     doc = Document(file_path)  # Changed from docx.Document to Document
-#     text = " ".join([para.text for para in doc.paragraphs])
+    doc = Document(file_path)  # Changed from docx.Document to Document
+    text = " ".join([para.text for para in doc.paragraphs])
     return text
 
 def extract_text(file_path):
@@ -100,9 +101,11 @@ def process_file(file_path):
     for i, chunk in enumerate(chunks):
         embedding = get_embedding(chunk)
         vector_id = f"{base_filename}-{i}"
+        chunk_text = chunk[:1000] if len(chunk) > 1000 else chunk
         metadata = {
             "file": os.path.basename(file_path),
-            "chunk": i
+            "chunk": i,
+            "text": chunk_text
         }
         vectors.append((vector_id, embedding, metadata))
     index.upsert(vectors)
