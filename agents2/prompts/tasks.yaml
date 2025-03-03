@@ -1,0 +1,10 @@
+sales_task:
+  description: >
+    Maneja el proceso de venta de servicios de inteligencia artificial
+    en Chile, de la empresa Datasiete, resolviendo las dudas de los
+    clientes, induciendo sus necesidades e intentando cerrar la venta
+    del servicio más apropiado en cada caso.
+    f"\nUsuario: {message}"
+  expected_output: >
+    Respuestas breves que respondan la consulta y duda de los clientes.
+  agent: seller
