@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from langfuse import Langfuse
+import boto3
 import os
 import time
 import uuid
@@ -16,15 +17,32 @@ langfuse = Langfuse(
   host="https://cloud.langfuse.com"
 )
 
+dynamodb = boto3.resource(
+    "dynamodb",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION", "sa-east-1")
+)
+table = dynamodb.Table("langfuse_traces")
+
 conversation_traces = {}
 
 def get_trace(sender):
     """Obtiene o crea un trace único para la conversación."""
-    if sender not in conversation_traces:
+    response = table.get_item(Key={'sender': sender})
+    if 'Item' in response:
+        trace_id = response['Item']['trace_id']
+    else:
         trace_id = str(uuid.uuid4())
-        trace = langfuse.trace(name=f"conversation_{sender}", trace_id=trace_id)
-        conversation_traces[sender] = trace
-    return conversation_traces[sender]
+        table.put_item(
+            Item={
+                'sender': sender,
+                'trace_id': trace_id
+            }
+        )
+    trace = langfuse.trace(name=f"conversation_{sender}", trace_id=trace_id)
+    conversation_traces[sender] = trace
+    return trace
 
 def log_message(trace, sender, message):
     """Registra el mensaje del cliente."""
