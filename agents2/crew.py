@@ -1,10 +1,10 @@
 import re
+import os
 from crewai import Agent, Crew, LLM, Process, Task
 from crewai.project import CrewBase, agent, after_kickoff, crew, task
 
 
-OPENAI_API_KEY = ""
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 llm = LLM(
     model="gpt-3.5-turbo-0125",
