@@ -1,0 +1,44 @@
+name: CI/CD Pipeline to ECS Fargate
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Paso 1: Check out el código desde GitHub
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      # Paso 2: Configurar AWS CLI (con las credenciales)
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: sa-east-1
+
+      # Paso 3: Construir la imagen Docker
+      - name: Build Docker image
+        run: |
+          docker build -t agent .
+
+      # Paso 4: Iniciar sesión en Amazon ECR (Elastic Container Registry)
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region sa-east-1 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com
+
+      # Paso 5: Etiquetar la imagen Docker y empujarla a ECR
+      - name: Push image to ECR
+        run: |
+          docker tag agent:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com/my-repo:latest
+          docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com/my-repo:latest
+
+      # Paso 6: Actualizar el servicio Fargate
+      - name: Update Fargate Service
+        run: |
+          aws ecs update-service --cluster cluster --service service --force-new-deployment --region sa-east-1

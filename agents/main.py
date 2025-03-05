@@ -17,9 +17,9 @@ class MessageRequest(BaseModel):
 
 @app.get("/")
 def index():
-    return {"Mensaje": "API de conversación con Agente Vendedor usando CrewAI"}
+    return {"Mensaje": "API de ventas con Agente Vendedor"}
 
-@app.post("/agent")
+@app.post("/agent_response")
 async def agent_response(request: MessageRequest):
     try:
         sender = request.sender
@@ -38,4 +38,4 @@ async def agent_response(request: MessageRequest):
         log_response(trace, response, start_time)
         return {"response": response}
     except Exception as e:
-        logging.error(f" Error en handler: {str(e)}")
+        logging.error(f" Error en agent_response: {str(e)}")

@@ -1,10 +1,12 @@
 import os
 import sympy as sp
 from crewai.tools import tool
+from dotenv import load_dotenv
 from langchain_community.embeddings import OpenAIEmbeddings
 from pinecone import Pinecone
 
 
+load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
