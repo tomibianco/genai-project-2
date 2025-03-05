@@ -1,10 +1,13 @@
-import re
 import os
+import re
+from dotenv import load_dotenv
 from crewai import Agent, Crew, LLM, Process, Task
-from crewai.project import CrewBase, agent, after_kickoff, crew, task
+from crewai.project import CrewBase, agent, after_kickoff, before_kickoff, crew, task
 
 
+load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 
 llm = LLM(
     model="gpt-3.5-turbo-0125",
@@ -30,6 +33,7 @@ class SalesCrew:
         # Crea diccionario con respuestas divididas en oraciones terminadas en: . , ! o ?
         response = re.split(r"(?<=[.!?])\s+", raw_response.strip())
         response = tuple(s.strip() for s in response if s.strip())
+        # Guarda en memoria la respuesta original
         return response
     
     @agent

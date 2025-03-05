@@ -1,7 +1,9 @@
 from crew import SalesCrew
+from langfuse_log import get_trace, log_message, log_response
 from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
+import time
 
 
 logging.basicConfig(level=logging.INFO)
@@ -15,14 +17,17 @@ class MessageRequest(BaseModel):
 
 @app.get("/")
 def index():
-    return {"Mensaje": "API de conversación con Agente Vendedor usando CrewAI"}
+    return {"Mensaje": "API de ventas con Agente Vendedor"}
 
-@app.post("/agent")
+@app.post("/agent_response")
 async def agent_response(request: MessageRequest):
     try:
         sender = request.sender
         message = request.message
+        trace = get_trace(sender)
+        log_message(trace, sender, message)
         logging.info(f" Mensaje recibido de {sender}: {message}")
+        start_time = time.time()
         response = sales_crew.crew().kickoff(
             inputs={
                 "sender": sender,
@@ -30,6 +35,7 @@ async def agent_response(request: MessageRequest):
             }
         )
         logging.info(f" Respuesta generada por el agente")
+        log_response(trace, response, start_time)
         return {"response": response}
     except Exception as e:
-        logging.error(f" Error en handler: {str(e)}")
+        logging.error(f" Error en agent_response: {str(e)}")
