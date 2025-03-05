@@ -39,3 +39,4 @@ async def agent_response(request: MessageRequest):
         return {"response": response}
     except Exception as e:
         logging.error(f" Error en agent_response: {str(e)}")
+        return {"error": "Ocurrió un error en el procesamiento del mensaje", "details": str(e)}
