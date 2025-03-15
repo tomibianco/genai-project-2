@@ -1,36 +1,32 @@
 import os
-
 from dotenv import load_dotenv
-
+from agents import function_tool
+from openai import OpenAI
+from pinecone import Pinecone
 
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
+client = OpenAI()
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index = pc.Index("genaiproject2")
 
-embed = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    openai_api_key=OPENAI_API_KEY
-)
-
-
-@tool("Calculadora Científica")
-def scientific_calculator(expression: str) -> str:
-    """ Evalúa una expresión matemática usando SymPy. Soporta operaciones científicas avanzadas. """
-    try:
-        result = sp.sympify(expression)
-        return str(result)
-    except Exception as e:
-        return f"Error en el cálculo: {str(e)}"
+def get_embedding(text):
+    """ Función para generar el embedding de un texto."""
+    response = client.embeddings.create(
+        input=text,
+        model="text-embedding-3-small"
+    )
+    embed = response.data[0].embedding
+    return embed
     
-@tool("RAG de Base de Datos")
+@function_tool
 def rag_docs(message: str) -> str:
-    """ Herramienta de acceso a BBDD e información vectorizada de la empresa. """
+    """ Herramienta de acceso a BBDD e información vectorizada de la empresa."""
     try:
-        message_embedding = embed.embed_query(message)
+        message_embedding = get_embedding(message)
         rag_result = index.query(
             vector=message_embedding,
             top_k=3,

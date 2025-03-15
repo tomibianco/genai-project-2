@@ -4,9 +4,8 @@ import pandas as pd
 from dotenv import load_dotenv
 from docx import Document
 import PyPDF2
-from langchain_community.embeddings import OpenAIEmbeddings
+from openai import OpenAI
 from pinecone import Pinecone
-
 
 
 load_dotenv()
@@ -15,13 +14,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 FOLDER_PATH = os.getenv("FOLDER_PATH")
 
+client = OpenAI()
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index = pc.Index("genaiproject2")
-
-embed = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    openai_api_key=OPENAI_API_KEY
-)
 
 
 def extract_text_pdf(file_path):
@@ -75,9 +70,13 @@ def split_text(text, chunk_size):
     return chunks
 
 def get_embedding(text):
-    """ Función para generar el embedding de un texto usando el modelo "text-embedding-3-small."""
-    embedding = embed.embed_query(text)
-    return embedding
+    """ Función para generar el embedding de un texto."""
+    response = client.embeddings.create(
+        input=text,
+        model="text-embedding-3-small"
+    )
+    embed = response.data[0].embedding
+    return embed
 
 def sanitize_filename(filename):
     """Sanitiza el nombre del archivo para usar como ID en Pinecone."""

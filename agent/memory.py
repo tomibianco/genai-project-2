@@ -15,8 +15,6 @@ class MemoryManager:
         key = f"chat_history:{sender}"
         chat_history = self.get_history(sender)
         chat_history.append({"user": message, "bot": response})
-        
-        # Guarda la conversación en formato JSON
         self.redis.set(key, json.dumps(chat_history), ex=86400)  # Tiempo de expiración en segundos (24 horas)
 
     def get_history(self, sender):

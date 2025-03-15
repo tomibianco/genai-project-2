@@ -17,6 +17,12 @@ langfuse = Langfuse(
 
 conversation_traces = {}
 
+def get_prompt(*args):
+    """Obtiene la última versión del system prompt generado desde Langfuse."""
+    prompt = langfuse.get_prompt("seller_prompt", label="latest")
+    langfuse_prompt = prompt.compile()
+    return langfuse_prompt
+
 def get_trace(sender):
     """Obtiene o crea un trace único para la conversación."""
     if sender not in conversation_traces:

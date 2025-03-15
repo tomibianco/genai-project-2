@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-WORKDIR /agents
+WORKDIR /agent
 
 COPY requirements.txt .
 
