@@ -1,8 +1,8 @@
-from dotenv import load_dotenv
-from langfuse import Langfuse
 import os
 import time
 import uuid
+from dotenv import load_dotenv
+from langfuse import Langfuse
 
 
 load_dotenv()

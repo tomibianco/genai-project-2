@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
-from agents import function_tool
 from openai import OpenAI
 from pinecone import Pinecone
+from agents import function_tool
 
 
 load_dotenv()

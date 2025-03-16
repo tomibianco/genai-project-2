@@ -1,9 +1,7 @@
-from agent import run_agent
-from langfuse_log import get_trace, log_message, log_response
+from seller_agent import run_agent
 from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
-import time
 
 
 logging.basicConfig(level=logging.INFO)
@@ -23,10 +21,7 @@ async def agent_response(request: MessageRequest):
     try:
         sender = request.sender
         message = request.message
-        trace = get_trace(sender)
-        log_message(trace, sender, message)
         logging.info(f" Mensaje recibido de {sender}: {message}")
-        start_time = time.time()
         response = run_agent(
             inputs={
                 "sender": sender,
@@ -34,7 +29,6 @@ async def agent_response(request: MessageRequest):
             }
         )
         logging.info(f" Respuesta generada por el agente")
-        log_response(trace, response, start_time)
         return {"response": response}
     except Exception as e:
         logging.error(f" Error en agent_response: {str(e)}")
