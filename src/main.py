@@ -1,4 +1,4 @@
-from seller_agent import run_agent
+from agent_flow import run_agent
 from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
