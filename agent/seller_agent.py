@@ -16,48 +16,30 @@ logging.basicConfig(level=logging.INFO)
 memory = MemoryManager()
 
 
-def initialize_agent() -> Agent:
+def initialize_agent(context) -> Agent:
     """Definición de agente vendedor"""
     try:
         agent = Agent(
             name="seller",
-            instructions=get_prompt,
+            instructions=get_prompt(context),
             model="gpt-3.5-turbo-0125",
             model_settings=ModelSettings(
                 temperature=0.4,
                 max_tokens=150
             ),
-            # tools=[
-            #     rag_docs(
-            #         tool_name="retrieval",
-            #         tool_description="Complementa la consulta con información de la BBDD de la empresa"
-            #     )
-            # ],
+            tools=[rag_docs]
         )
         return agent
     except Exception as e:
         logging.error(f"Error en creación de agente: {e}", exc_info=True)
         return None
     
-def prepare_inputs(inputs):
+def load_conversation(inputs):
     """En caso de existir, recupera historial de conversación y la anexa a contexto"""
     sender = inputs.get("sender")
     history = memory.get_history(sender)
     context = "\n".join([f"{h["user"]}\n{h.get("agent", "")}" for h in history])
-    inputs["context"] = context
-    return inputs
-
-def message_creation(inputs):
-    """Compila el input del usuario con historial de conversación, en caso que exista"""
-    message = inputs.get("message")
-    context = inputs.get("context")
-    context_message = (
-        f"Mensajes anteriores con cliente:\n"
-        f"(En caso de existir mensajes previos, continuar el hilo de la conversación, sin saludar nuevamente)\n"
-        f"{context}\n"
-        f"Consulta actual del cliente: {message}"
-    )
-    return context_message
+    return context
 
 def process_output(response):
     """Crea diccionario con respuestas divididas en oraciones terminadas en: . , ! o ?"""
@@ -70,10 +52,9 @@ async def run_agent(inputs):
     trace = get_trace(inputs["sender"])
     log_message(trace, inputs["sender"], inputs["message"])
     start_time = time.time()
-    agent = initialize_agent()
-    processed_inputs = prepare_inputs(inputs)
-    agent_message = message_creation(processed_inputs)
-    response = await Runner.run(agent, agent_message)
+    context = load_conversation(inputs)
+    agent = initialize_agent(context)
+    response = await Runner.run(agent, inputs["message"])
     raw_response = response.final_output
     log_response(trace, raw_response, start_time)
     memory.store_message(inputs["sender"], inputs["message"], raw_response)

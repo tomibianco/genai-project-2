@@ -24,7 +24,7 @@ def get_embedding(text):
     
 @function_tool
 def rag_docs(message: str) -> str:
-    """ Herramienta de acceso a BBDD e información vectorizada de la empresa."""
+    """Complementa la consulta con información de la BBDD de la empresa"""
     try:
         message_embedding = get_embedding(message)
         rag_result = index.query(
