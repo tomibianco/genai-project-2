@@ -22,7 +22,7 @@ async def agent_response(request: MessageRequest):
         sender = request.sender
         message = request.message
         logging.info(f" Mensaje recibido de {sender}: {message}")
-        response = run_agent(
+        response = await run_agent(
             inputs={
                 "sender": sender,
                 "message": message
