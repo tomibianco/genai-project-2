@@ -4,7 +4,7 @@ import re
 import time
 from dotenv import load_dotenv
 from agents import Agent, ModelSettings, Runner
-from langfuse_log import get_prompt, get_trace, log_message, log_response
+from monitoring import get_prompt, get_trace, log_message, log_response
 from memory import MemoryManager
 from tools import rag_docs
 
@@ -51,7 +51,12 @@ def message_creation(inputs):
     """Compila el input del usuario con historial de conversación, en caso que exista"""
     message = inputs.get("message")
     context = inputs.get("context")
-    context_message = f"Conversación previa con cliente: {context}\n Consulta actual del cliente: {message}"
+    context_message = (
+        f"Mensajes anteriores con cliente:\n"
+        f"(En caso de existir mensajes previos, continuar el hilo de la conversación, sin saludar nuevamente)\n"
+        f"{context}\n"
+        f"Consulta actual del cliente: {message}"
+    )
     return context_message
 
 def process_output(response):
